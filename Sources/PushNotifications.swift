@@ -66,8 +66,14 @@ import Foundation
      */
     /// - Tag: register
     @objc public func registerForRemoteNotifications() {
-        self.registerForPushNotifications(options: [.alert, .sound, .badge])
+        if #available(iOS 10, *) {
+            self.registerForPushNotifications(options: [.alert, .sound, .badge])
+        } else {
+            let settings = UIUserNotificationSettings(types: [.sound, .alert, .badge], categories: nil)
+            self.registerForPushNotifications(settings: settings)
+        }
     }
+
     #if os(iOS)
     /**
      Register to receive remote notifications via Apple Push Notification service.
@@ -75,6 +81,8 @@ import Foundation
      - Parameter options: The authorization options your app is requesting. You may combine the available constants to request authorization for multiple items. Request only the authorization options that you plan to use. For a list of possible values, see [UNAuthorizationOptions](https://developer.apple.com/documentation/usernotifications/unauthorizationoptions).
      */
     /// - Tag: registerOptions
+
+    @available(iOS 10, *)
     @objc public func registerForRemoteNotifications(options: UNAuthorizationOptions) {
         self.registerForPushNotifications(options: options)
     }
@@ -406,8 +414,8 @@ import Foundation
             })
         }
     }
-
     #if os(iOS)
+    @available(iOS 10.0, *)
     private func registerForPushNotifications(options: UNAuthorizationOptions) {
         UNUserNotificationCenter.current().requestAuthorization(options: options) { (granted, error) in
             if granted {
@@ -420,6 +428,12 @@ import Foundation
             }
         }
     }
+    
+    @available(iOS 9.0, *)
+    private func registerForPushNotifications(settings: UIUserNotificationSettings) {
+        UIApplication.shared.registerUserNotificationSettings(settings)
+    }
+    
     #elseif os(OSX)
     private func registerForPushNotifications(options: NSApplication.RemoteNotificationType) {
         NSApplication.shared.registerForRemoteNotifications(matching: options)
